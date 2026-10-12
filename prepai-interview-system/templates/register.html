@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account – PREPAI{% endblock %}
+
+{% block content %}
+<div class="auth-viewport">
+  <!-- Left Promotional Section -->
+  <div class="auth-promo-pane">
+    <div class="promo-top">
+      <div class="brand">
+        <span class="glowing-dot"></span>
+        <span>PREPAI</span>
+      </div>
+    </div>
+
+    <div class="promo-center">
+      <span class="eyebrow-label">INTERVIEW PREPARATION, REHEARSED</span>
+      <h1 class="promo-headline serif-heading">
+        Walk in already having done this before.
+      </h1>
+      <p class="promo-subtext">
+        Practice real interview questions, get instant AI feedback on clarity, structure and confidence, and track your readiness before the mic actually goes live.
+      </p>
+    </div>
+
+    <div class="promo-bottom">
+      <div class="readiness-wave" aria-hidden="true">
+        <span style="height: 14px;"></span>
+        <span style="height: 22px;"></span>
+        <span style="height: 10px;"></span>
+        <span style="height: 18px;"></span>
+        <span style="height: 24px;"></span>
+      </div>
+      <span class="readiness-signal-text">LIVE READINESS SIGNAL</span>
+    </div>
+  </div>
+
+  <!-- Right Authentication Section -->
+  <div class="auth-form-pane">
+    <div class="auth-card">
+      <div class="segmented-control" role="tablist">
+        <a href="{{ url_for('auth.login') }}" class="segment-btn" role="tab" aria-selected="false">Log in</a>
+        <a href="{{ url_for('auth.register') }}" class="segment-btn active" role="tab" aria-selected="true">Create account</a>
+      </div>
+
+      <div class="auth-header">
+        <h2 class="auth-title">Create your account</h2>
+        <p class="auth-subtitle">Begin structured mock rounds with instant AI evaluation.</p>
+      </div>
+
+      {% if error %}
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      {% endif %}
+
+      <form action="{{ url_for('auth.register') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <div class="form-group">
+          <label for="name" class="form-label">Full Name</label>
+          <input type="text" id="name" name="name" class="form-input" placeholder="Vinoth Kumar" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" id="email" name="email" class="form-input" placeholder="vinoth@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" id="password" name="password" class="form-input" placeholder="At least 6 characters" required>
+        </div>
+
+        <div class="form-group">
+          <label for="confirm_password" class="form-label">Confirm Password</label>
+          <input type="password" id="confirm_password" name="confirm_password" class="form-input" placeholder="Confirm password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top: 10px;">
+          Create account
+        </button>
+      </form>
+
+      <div class="or-divider">
+        <span>OR</span>
+      </div>
+
+      <form action="{{ url_for('auth.guest_login') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-outline btn-full">
+          Continue as guest
+        </button>
+      </form>
+
+      <p class="auth-disclaimer">
+        By continuing you agree this is a demo authentication flow using your browser's local storage — no data leaves your device.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

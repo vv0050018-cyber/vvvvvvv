@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error – PREPAI{% endblock %}
+
+{% block content %}
+<main class="container" style="text-align: center; padding: 100px 24px;">
+  <span class="eyebrow-label" style="color: var(--accent-coral);">SYSTEM EXCEPTION 500</span>
+  <h1 class="welcome-title serif-heading" style="margin: 12px 0 16px;">Unexpected Interrupt</h1>
+  <p class="text-secondary" style="max-width: 480px; margin: 0 auto 28px;">
+    An internal evaluation error occurred. Your progress data is safely saved in SQLite.
+  </p>
+  <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">Return to Dashboard</a>
+</main>
+{% endblock %}

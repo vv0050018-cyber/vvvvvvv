@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}PREPAI – AI-Powered Interview Preparation System{% endblock %}</title>
+  <!-- Google Fonts: Playfair Display for serif headings and Inter for UI sans-serif -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  {% if g.user %}
+  <!-- Top Navigation Bar matching Screenshot 1 -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="{{ url_for('dashboard.index') }}" class="nav-brand">
+        <span class="glowing-dot"></span>
+        <span>PREPAI</span>
+      </a>
+      <ul class="nav-links">
+        <li>
+          <a href="{{ url_for('dashboard.index') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('question_bank.index') }}" class="nav-link {% if active_page == 'question_bank' %}active{% endif %}">
+            Question Bank
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('interview.practice') }}" class="nav-link {% if active_page == 'practice' %}active{% endif %}">
+            Practice
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('interview.progress') }}" class="nav-link {% if active_page == 'progress' %}active{% endif %}">
+            Progress
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="nav-right">
+      <div class="user-profile">
+        <div class="avatar-badge">
+          {{ g.user['name'][0]|upper if g.user['name'] else 'V' }}
+        </div>
+        <span class="user-name">{{ g.user['name'] }}</span>
+      </div>
+      <a href="{{ url_for('auth.logout') }}" class="btn-logout" title="Log out">Log out</a>
+    </div>
+  </nav>
+  {% endif %}
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="container" style="padding-top: 16px; padding-bottom: 0;">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category if category != 'message' else 'info' }}">
+            <span>{{ message }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Main Content Block -->
+  {% block content %}{% endblock %}
+
+  <!-- Global Scripts -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

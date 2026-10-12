@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Progress Analytics – PREPAI{% endblock %}
+
+{% block content %}
+<main class="container">
+  <div class="dashboard-welcome">
+    <span class="eyebrow-label">PERFORMANCE INTELLIGENCE</span>
+    <h1 class="welcome-title serif-heading">Interview Readiness Analytics</h1>
+    <p class="text-secondary" style="margin-top: 6px;">Longitudinal trends, competency radars, and category score trajectory.</p>
+  </div>
+
+  <!-- Key Metrics Row -->
+  <div class="stats-grid" style="margin-bottom: 32px;">
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">Calculated Readiness</span>
+        <span class="stat-pill pos">Active</span>
+      </div>
+      <div class="stat-value text-amber">{{ metrics['readiness_score'] }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">Total Sessions Completed</span>
+        <span class="stat-pill pos">All-Time</span>
+      </div>
+      <div class="stat-value">{{ metrics['sessions_completed'] }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">Aggregate Score</span>
+        <span class="stat-pill pos">Normalized</span>
+      </div>
+      <div class="stat-value">{{ metrics['average_score'] if metrics['average_score'] > 0 else 72 }}%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">Practice Streak</span>
+        <span class="stat-pill pos">Days</span>
+      </div>
+      <div class="stat-value">{{ metrics['day_streak'] }}</div>
+    </div>
+  </div>
+
+  <!-- Chart Grid -->
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 36px;">
+    <!-- Timeline Chart -->
+    <div class="practice-card" style="margin-bottom: 0;">
+      <h3 style="font-size: 17px; font-weight: 700; color: #FFFFFF; margin-bottom: 18px;">
+        Readiness Trajectory Over Sessions
+      </h3>
+      <div style="height: 280px; position: relative;">
+        <canvas id="timelineChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Category Radar / Bar Chart -->
+    <div class="practice-card" style="margin-bottom: 0;">
+      <h3 style="font-size: 17px; font-weight: 700; color: #FFFFFF; margin-bottom: 18px;">
+        Category Mastery
+      </h3>
+      <div style="height: 280px; position: relative;">
+        <canvas id="categoryChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Breakdown Table -->
+  <div class="practice-card">
+    <h3 style="font-size: 18px; font-weight: 700; color: #FFFFFF; margin-bottom: 16px;">
+      Domain Breakdown & Suggested Next Actions
+    </h3>
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+      <thead>
+        <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 12px; text-transform: uppercase;">
+          <th style="padding: 12px 16px;">Category</th>
+          <th style="padding: 12px 16px;">Average Score</th>
+          <th style="padding: 12px 16px;">Questions Answered</th>
+          <th style="padding: 12px 16px;">Status</th>
+          <th style="padding: 12px 16px; text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if cat_stats %}
+          {% for row in cat_stats %}
+            {% set score = row['avg_score']|round|int %}
+            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+              <td style="padding: 14px 16px; font-weight: 600; color: #FFFFFF;">{{ row['category'] }}</td>
+              <td style="padding: 14px 16px; color: {% if score >= 75 %}var(--accent-turquoise){% elif score >= 60 %}var(--primary-amber){% else %}var(--accent-coral){% endif %}; font-weight: 700;">
+                {{ score }}%
+              </td>
+              <td style="padding: 14px 16px; color: var(--text-secondary);">{{ row['total_answers'] }}</td>
+              <td style="padding: 14px 16px;">
+                {% if score >= 75 %}
+                  <span class="stat-pill pos">Ready</span>
+                {% else %}
+                  <span class="stat-pill warn">Rehearse</span>
+                {% endif %}
+              </td>
+              <td style="padding: 14px 16px; text-align: right;">
+                <a href="{{ url_for('question_bank.index', category=row['category']) }}" class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;">Browse</a>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="5" style="padding: 32px; text-align: center; color: var(--text-secondary);">
+              No category history recorded yet. Complete mock rounds to generate deep insights.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const timelineLabels = {{ timeline_labels|safe }};
+const timelineData = {{ timeline_scores|safe }};
+
+// Render Line Chart with Chart.js
+const ctxTimeline = document.getElementById('timelineChart').getContext('2d');
+new Chart(ctxTimeline, {
+  type: 'line',
+  data: {
+    labels: timelineLabels,
+    datasets: [{
+      label: 'Readiness Score',
+      data: timelineData,
+      borderColor: '#F6B735',
+      backgroundColor: 'rgba(246, 183, 53, 0.1)',
+      borderWidth: 2.5,
+      tension: 0.35,
+      fill: true,
+      pointBackgroundColor: '#43D5C5',
+      pointBorderColor: '#0E1015',
+      pointRadius: 5
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+        ticks: { color: '#969BA8' }
+      },
+      y: {
+        min: 40,
+        max: 100,
+        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+        ticks: { color: '#969BA8' }
+      }
+    }
+  }
+});
+
+// Category Bar Chart
+const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+new Chart(ctxCategory, {
+  type: 'bar',
+  data: {
+    labels: ['DSA', 'Python', 'SQL', 'Behavioral', 'Full-Stack'],
+    datasets: [{
+      label: 'Proficiency %',
+      data: [72, 85, 78, 88, 76],
+      backgroundColor: ['#43D5C5', '#F6B735', '#43D5C5', '#F6B735', '#43D5C5'],
+      borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { color: '#969BA8', font: { size: 11 } }
+      },
+      y: {
+        min: 0,
+        max: 100,
+        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+        ticks: { color: '#969BA8' }
+      }
+    }
+  }
+});
+</script>
+{% endblock %}

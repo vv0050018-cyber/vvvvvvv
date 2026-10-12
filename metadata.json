@@ -1,0 +1,6 @@
+{
+  "name": "PREPAI",
+  "description": "PREPAI – AI-Powered Interview Preparation System with real-time feedback, mock interviews, and readiness tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

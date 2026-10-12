@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Log In – PREPAI{% endblock %}
+
+{% block content %}
+<div class="auth-viewport">
+  <!-- Left Promotional Section (52% viewport width) -->
+  <div class="auth-promo-pane">
+    <div class="promo-top">
+      <div class="brand">
+        <span class="glowing-dot"></span>
+        <span>PREPAI</span>
+      </div>
+    </div>
+
+    <div class="promo-center">
+      <span class="eyebrow-label">INTERVIEW PREPARATION, REHEARSED</span>
+      <h1 class="promo-headline serif-heading">
+        Walk in already having done this before.
+      </h1>
+      <p class="promo-subtext">
+        Practice real interview questions, get instant AI feedback on clarity, structure and confidence, and track your readiness before the mic actually goes live.
+      </p>
+    </div>
+
+    <div class="promo-bottom">
+      <div class="readiness-wave" aria-hidden="true">
+        <span style="height: 14px;"></span>
+        <span style="height: 22px;"></span>
+        <span style="height: 10px;"></span>
+        <span style="height: 18px;"></span>
+        <span style="height: 24px;"></span>
+      </div>
+      <span class="readiness-signal-text">LIVE READINESS SIGNAL</span>
+    </div>
+  </div>
+
+  <!-- Right Authentication Section (48% viewport width) -->
+  <div class="auth-form-pane">
+    <div class="auth-card">
+      <!-- Segmented Control with active Log in tab -->
+      <div class="segmented-control" role="tablist">
+        <a href="{{ url_for('auth.login') }}" class="segment-btn active" role="tab" aria-selected="true">Log in</a>
+        <a href="{{ url_for('auth.register') }}" class="segment-btn" role="tab" aria-selected="false">Create account</a>
+      </div>
+
+      <div class="auth-header">
+        <h2 class="auth-title">Welcome back</h2>
+        <p class="auth-subtitle">Log in to pick up your mock interview where you left off.</p>
+      </div>
+
+      {% if error %}
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      {% endif %}
+
+      <form action="{{ url_for('auth.login') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <div class="form-group">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" id="email" name="email" class="form-input" placeholder="vinoth@example.com" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" required>
+        </div>
+
+        <div class="form-row-remember">
+          <label class="remember-label">
+            <input type="checkbox" name="remember" value="1">
+            <span>Remember me</span>
+          </label>
+          <a href="{{ url_for('auth.forgot_password') }}" class="link-muted">Forgot password</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full">
+          Log in
+        </button>
+      </form>
+
+      <div class="or-divider">
+        <span>OR</span>
+      </div>
+
+      <form action="{{ url_for('auth.guest_login') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-outline btn-full">
+          Continue as guest
+        </button>
+      </form>
+
+      <p class="auth-disclaimer">
+        By continuing you agree this is a demo authentication flow using your browser's local storage — no data leaves your device.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

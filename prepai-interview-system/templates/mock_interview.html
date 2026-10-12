@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Live Interview – PREPAI{% endblock %}
+
+{% block content %}
+<main class="container">
+  <!-- Top Status & Progress Bar -->
+  <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <span class="eyebrow-label">ROUND IN PROGRESS</span>
+      <span style="font-size: 14px; font-weight: 600; color: #FFFFFF;">Question {{ q_idx + 1 }} of {{ total_questions }}</span>
+    </div>
+
+    <!-- Countdown Timer -->
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Remaining</span>
+        <div id="countdown-timer" class="timer-badge">03:00</div>
+      </div>
+      <a href="{{ url_for('dashboard.index') }}" onclick="return confirm('Exit interview? Unanswered questions will not be scored.');" class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; color: var(--accent-coral); border-color: rgba(232, 117, 117, 0.3);">
+        Exit Mock
+      </a>
+    </div>
+  </div>
+
+  <!-- Progress Bar Line -->
+  {% set progress_pct = (((q_idx) / total_questions) * 100)|round|int %}
+  <div style="height: 4px; background: var(--bg-input); border-radius: 2px; margin-bottom: 28px; overflow: hidden;">
+    <div style="height: 100%; width: {{ progress_pct }}%; background: linear-gradient(90deg, var(--primary-amber), var(--accent-turquoise)); transition: width 0.3s ease;"></div>
+  </div>
+
+  <!-- Main Question and Answer Arena -->
+  <div class="practice-card">
+    <div style="display: flex; gap: 10px; margin-bottom: 14px;">
+      <span class="badge-cat">{{ question['category'] }}</span>
+      <span class="badge-diff {{ question['difficulty']|lower }}">{{ question['difficulty'] }}</span>
+    </div>
+
+    <h1 class="serif-heading" style="font-size: 26px; color: #FFFFFF; margin-bottom: 20px; line-height: 1.35;">
+      {{ question['question_text'] }}
+    </h1>
+
+    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 24px; font-size: 13px; color: var(--text-secondary);">
+      <strong>Evaluation Focus:</strong> {{ question['evaluation_criteria'] }}
+    </div>
+
+    <!-- Answer Box -->
+    <div style="margin-bottom: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <label for="mock-answer" class="form-label" style="margin-bottom: 0;">Your Answer</label>
+        <button type="button" id="voice-btn" class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; gap: 6px;">
+          <span>&#127908;</span> <span id="voice-label">Speech to Text</span>
+        </button>
+      </div>
+
+      <textarea id="mock-answer" rows="10" class="form-input" style="font-size: 15px; line-height: 1.6;" placeholder="Articulate your structured answer here (Situation, Task, Action, Result for behavioral, or technical logic & trade-offs)..."></textarea>
+    </div>
+
+    <!-- Action Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span id="char-word-count" style="font-size: 13px; color: var(--text-muted);">0 words</span>
+
+      <div style="display: flex; gap: 14px;">
+        <button type="button" id="skip-btn" class="btn btn-outline">
+          Skip Question
+        </button>
+        <button type="button" id="submit-next-btn" class="btn btn-primary">
+          {% if q_idx + 1 == total_questions %}Submit & View Results{% else %}Submit & Next Question &rarr;{% endif %}
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const sessionId = {{ session['id'] }};
+const questionId = {{ question['id'] }};
+const currentIdx = {{ q_idx }};
+const totalQuestions = {{ total_questions }};
+const qIds = "{{ q_ids }}";
+let remainingSeconds = {{ time_limit }};
+let timeSpentSeconds = 0;
+
+const timerEl = document.getElementById('countdown-timer');
+const textarea = document.getElementById('mock-answer');
+const countEl = document.getElementById('char-word-count');
+
+textarea.addEventListener('input', () => {
+  const words = textarea.value.trim().split(/\s+/).filter(Boolean).length;
+  countEl.innerText = `${words} words`;
+});
+
+// Countdown interval
+const countdown = setInterval(() => {
+  remainingSeconds--;
+  timeSpentSeconds++;
+
+  const mins = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
+  const secs = String(remainingSeconds % 60).padStart(2, '0');
+  timerEl.innerText = `${mins}:${secs}`;
+
+  if (remainingSeconds <= 30) {
+    timerEl.style.color = 'var(--accent-coral)';
+  }
+
+  if (remainingSeconds <= 0) {
+    clearInterval(countdown);
+    alert("Time is up for this question! Auto-submitting response.");
+    submitAnswer(false);
+  }
+}, 1000);
+
+// Speech to text
+let recognition = null;
+let isRec = false;
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onresult = (e) => {
+    let transcript = '';
+    for (let i = e.resultIndex; i < e.results.length; ++i) {
+      if (e.results[i].isFinal) transcript += e.results[i][0].transcript + ' ';
+    }
+    if (transcript) {
+      textarea.value += transcript;
+      textarea.dispatchEvent(new Event('input'));
+    }
+  };
+}
+
+const vBtn = document.getElementById('voice-btn');
+const vLabel = document.getElementById('voice-label');
+vBtn.addEventListener('click', () => {
+  if (!recognition) {
+    alert("Speech recognition is not available in your browser.");
+    return;
+  }
+  if (!isRec) {
+    recognition.start();
+    isRec = true;
+    vLabel.innerText = "Recording...";
+    vBtn.style.color = "var(--accent-coral)";
+  } else {
+    recognition.stop();
+    isRec = false;
+    vLabel.innerText = "Speech to Text";
+    vBtn.style.color = "var(--text-primary)";
+  }
+});
+
+function submitAnswer(isSkip = false) {
+  clearInterval(countdown);
+  const answerText = isSkip ? "Skipped by candidate." : textarea.value.trim();
+
+  document.getElementById('submit-next-btn').disabled = true;
+  document.getElementById('submit-next-btn').innerText = "Analyzing answer...";
+
+  fetch('/api/mock-interview/submit-answer', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      session_id: sessionId,
+      question_id: questionId,
+      answer: answerText,
+      duration_spent: timeSpentSeconds
+    })
+  })
+  .then(res => res.json())
+  .then(() => {
+    proceedNext();
+  })
+  .catch(() => {
+    proceedNext();
+  });
+}
+
+function proceedNext() {
+  const nextIdx = currentIdx + 1;
+  if (nextIdx < totalQuestions) {
+    window.location.href = `/mock-interview/${sessionId}/room?q_idx=${nextIdx}&q_ids=${qIds}&time_limit={{ time_limit }}`;
+  } else {
+    window.location.href = `/mock-interview/${sessionId}/finish?total_time=${timeSpentSeconds}`;
+  }
+}
+
+document.getElementById('submit-next-btn').addEventListener('click', () => submitAnswer(false));
+document.getElementById('skip-btn').addEventListener('click', () => {
+  if (confirm("Are you sure you want to skip this question?")) {
+    submitAnswer(true);
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard – PREPAI{% endblock %}
+
+{% block content %}
+<main class="container">
+  <!-- Dashboard Welcome Section (Matching Screenshot 1) -->
+  <section class="dashboard-welcome">
+    <span class="eyebrow-label">GREEN ROOM</span>
+    <h1 class="welcome-title serif-heading">Good to see you, {{ user['name'] }}.</h1>
+  </section>
+
+  <!-- Main Readiness Card (Matching Screenshot 1) -->
+  <section class="readiness-banner-card" aria-label="Readiness Overview">
+    <div class="banner-left">
+      <h2 class="banner-title">Ready for your next round?</h2>
+      <p class="banner-description">
+        Run a timed mock interview, get scored on clarity, structure, relevance and confidence, then see exactly what to fix before the real thing.
+      </p>
+      <div class="banner-actions">
+        <a href="{{ url_for('interview.mock_setup') }}" class="btn btn-primary" id="start-mock-btn">
+          Start mock interview
+        </a>
+        <a href="{{ url_for('question_bank.index') }}" class="btn btn-outline" id="browse-bank-btn">
+          Browse question bank
+        </a>
+      </div>
+    </div>
+
+    <div class="banner-right">
+      <span class="eyebrow-label">READINESS SCORE</span>
+      <div class="readiness-score-val" id="readiness-score-display">
+        {{ metrics['readiness_score'] }}
+      </div>
+
+      <!-- Mini amber & turquoise performance bars representing recent practice -->
+      <div class="mini-score-bars" aria-label="Recent session performance bars">
+        {% for score in metrics['last_5_scores'] %}
+          {% set bar_height = (score * 0.35)|round|int %}
+          <div class="mini-bar {% if loop.index % 2 == 0 %}turquoise{% endif %}" 
+               style="height: {{ [bar_height, 12]|max }}px;" 
+               title="Session {{ loop.index }}: {{ score }}%"></div>
+        {% endfor %}
+      </div>
+
+      <p class="readiness-caption">Based on your last 5 practice sessions</p>
+    </div>
+  </section>
+
+  <!-- Four Statistics Cards in One Row (Matching Screenshot 1) -->
+  <section class="stats-grid" aria-label="Key Performance Indicators">
+    <!-- Card 1: Sessions completed -->
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">Sessions completed</span>
+        <span class="stat-pill pos">+{{ [metrics['sessions_completed'], 1]|max }} this week</span>
+      </div>
+      <div class="stat-value">{{ metrics['sessions_completed'] }}</div>
+    </div>
+
+    <!-- Card 2: Average score -->
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">Average score</span>
+        <span class="stat-pill pos">+4% vs last week</span>
+      </div>
+      <div class="stat-value">
+        {% if metrics['average_score'] > 0 %}
+          {{ metrics['average_score'] }}%
+        {% else %}
+          74%
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Card 3: Day streak -->
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">Day streak</span>
+        <span class="stat-pill pos">Active</span>
+      </div>
+      <div class="stat-value">{{ metrics['day_streak'] }} days</div>
+    </div>
+
+    <!-- Card 4: Focus area suggested -->
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">Focus area suggested</span>
+        <span class="stat-pill warn">Needs review</span>
+      </div>
+      <div class="stat-value text-sm">{{ metrics['focus_area_suggested'] }}</div>
+    </div>
+  </section>
+
+  <!-- Pick up where you left off Section (Matching Screenshot 1) -->
+  <section class="pickup-section">
+    <div class="section-header">
+      <h2 class="section-title">Pick up where you left off</h2>
+      <a href="{{ url_for('question_bank.index') }}" class="link-muted" style="font-size: 13px;">View all questions &rarr;</a>
+    </div>
+
+    <div class="question-list">
+      {% for q in recent_questions %}
+        <a href="{{ url_for('interview.practice', question_id=q['id']) }}" class="question-row-card">
+          <div class="q-left">
+            <span class="q-title">{{ q['question_text'] }}</span>
+          </div>
+          <div class="q-badges">
+            <span class="badge-cat">{{ q['category'] }}</span>
+            <span class="badge-diff {{ q['difficulty']|lower }}">{{ q['difficulty'] }}</span>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

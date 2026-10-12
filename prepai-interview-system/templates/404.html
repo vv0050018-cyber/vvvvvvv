@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found – PREPAI{% endblock %}
+
+{% block content %}
+<main class="container" style="text-align: center; padding: 100px 24px;">
+  <span class="eyebrow-label">ERROR 404</span>
+  <h1 class="welcome-title serif-heading" style="margin: 12px 0 16px;">Off-Script Stage</h1>
+  <p class="text-secondary" style="max-width: 480px; margin: 0 auto 28px;">
+    The interview room or question destination you requested could not be located.
+  </p>
+  <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">Return to Dashboard</a>
+</main>
+{% endblock %}

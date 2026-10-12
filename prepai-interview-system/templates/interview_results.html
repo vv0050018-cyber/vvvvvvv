@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Interview Evaluation Results – PREPAI{% endblock %}
+
+{% block content %}
+<main class="container">
+  <div class="dashboard-welcome">
+    <span class="eyebrow-label turquoise">ROUND DEBRIEF</span>
+    <h1 class="welcome-title serif-heading">Performance Assessment Report</h1>
+    <p class="text-secondary" style="margin-top: 6px;">Detailed AI-evaluated readiness score, structural clarity metrics, and recommendations.</p>
+  </div>
+
+  <!-- Big Result Card -->
+  <div class="readiness-banner-card" style="margin-bottom: 32px;">
+    <div class="banner-left">
+      <span class="eyebrow-label">FINAL ROUND SCORE</span>
+      <h2 class="serif-heading" style="font-size: 32px; color: #FFFFFF; margin: 10px 0;">
+        {% if overall_score >= 80 %}
+          Exceptional Readiness Demonstrated
+        {% elif overall_score >= 65 %}
+          Solid Foundation with Targeted Growth Areas
+        {% else %}
+          Foundational Stage – Needs Rehearsal
+        {% endif %}
+      </h2>
+      <p class="banner-description">
+        Completed {{ session['completed_questions'] }} of {{ session['total_questions'] }} interview questions in {{ session['category'] }}.
+      </p>
+
+      <div style="display: flex; gap: 14px;">
+        <a href="{{ url_for('interview.mock_setup') }}" class="btn btn-primary">Practice Again</a>
+        <a href="{{ url_for('interview.progress') }}" class="btn btn-outline">View Analytics</a>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline">Back to Green Room</a>
+      </div>
+    </div>
+
+    <div class="banner-right">
+      <span class="eyebrow-label">OVERALL ACCURACY</span>
+      <div class="readiness-score-val" style="color: {% if overall_score >= 75 %}var(--accent-turquoise){% elif overall_score >= 60 %}var(--primary-amber){% else %}var(--accent-coral){% endif %};">
+        {{ overall_score }}
+      </div>
+      <p class="readiness-caption">Out of 100 possible points</p>
+    </div>
+  </div>
+
+  <!-- Highlights Grid -->
+  <div class="stats-grid" style="margin-bottom: 36px;">
+    <div class="stat-card">
+      <span class="stat-label">Strongest Competency</span>
+      <div class="stat-value text-sm text-turquoise" style="margin-top: 8px;">{{ strongest_area }}</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Primary Improvement Focus</span>
+      <div class="stat-value text-sm text-coral" style="margin-top: 8px;">{{ weakest_area }}</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Questions Evaluated</span>
+      <div class="stat-value" style="margin-top: 8px;">{{ session['completed_questions'] }}</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Duration Elapsed</span>
+      <div class="stat-value text-sm" style="margin-top: 8px;">
+        {{ (session['duration_seconds'] // 60) }}m {{ (session['duration_seconds'] % 60) }}s
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Question Breakdown -->
+  <section>
+    <h2 class="section-title" style="margin-bottom: 20px;">Question-by-Question Diagnostic</h2>
+
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+      {% for a in answers %}
+        {% set fb = a['feedback'] %}
+        <div class="practice-card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+            <div>
+              <span class="badge-cat">{{ a['category'] }}</span>
+              <span class="badge-diff {{ a['difficulty']|lower }}" style="margin-left: 8px;">{{ a['difficulty'] }}</span>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Question Score</span>
+              <div style="font-size: 26px; font-weight: 800; color: var(--primary-amber);">{{ a['score'] }}%</div>
+            </div>
+          </div>
+
+          <h3 class="serif-heading" style="font-size: 20px; color: #FFFFFF; margin-bottom: 14px;">
+            {{ loop.index }}. {{ a['question_text'] }}
+          </h3>
+
+          <!-- Candidate's answer -->
+          <div style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;">
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Your Delivered Answer</div>
+            <p style="font-size: 14px; color: #F4F2EE; line-height: 1.6; white-space: pre-wrap;">{{ a['answer_text'] }}</p>
+          </div>
+
+          <!-- Dimension Scores -->
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px;">
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px;">
+              <span style="font-size: 11px; color: var(--text-muted);">Relevance</span>
+              <div style="font-size: 16px; font-weight: 700; color: var(--accent-turquoise);">{{ fb.get('relevance', 70) }}%</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px;">
+              <span style="font-size: 11px; color: var(--text-muted);">Technical</span>
+              <div style="font-size: 16px; font-weight: 700; color: var(--accent-turquoise);">{{ fb.get('technical_correctness', 70) }}%</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px;">
+              <span style="font-size: 11px; color: var(--text-muted);">Clarity</span>
+              <div style="font-size: 16px; font-weight: 700; color: var(--primary-amber);">{{ fb.get('clarity', 70) }}%</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px;">
+              <span style="font-size: 11px; color: var(--text-muted);">Structure</span>
+              <div style="font-size: 16px; font-weight: 700; color: var(--primary-amber);">{{ fb.get('structure', 70) }}%</div>
+            </div>
+          </div>
+
+          <!-- Strengths and Weaknesses -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
+              <h4 style="font-size: 12px; color: var(--accent-turquoise); text-transform: uppercase; margin-bottom: 6px;">Key Strengths</h4>
+              <ul style="padding-left: 18px; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                {% for s in fb.get('strengths', []) %}
+                  <li>{{ s }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div>
+              <h4 style="font-size: 12px; color: var(--accent-coral); text-transform: uppercase; margin-bottom: 6px;">Improvement Points</h4>
+              <ul style="padding-left: 18px; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                {% for w in fb.get('weaknesses', []) %}
+                  <li>{{ w }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+
+          <!-- Model Answer -->
+          <div style="background: rgba(246, 183, 53, 0.05); border: 1px solid rgba(246, 183, 53, 0.2); border-radius: var(--radius-md); padding: 14px;">
+            <h4 style="font-size: 12px; color: var(--primary-amber); text-transform: uppercase; margin-bottom: 4px;">Exemplary Benchmark Structure</h4>
+            <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+              {{ fb.get('suggested_improved_answer') or a['sample_answer'] }}
+            </p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+{% endblock %}
